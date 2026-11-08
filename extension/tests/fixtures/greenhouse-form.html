@@ -1,0 +1,64 @@
+<!-- Trimmed copy of the structure of a Greenhouse job board application form. -->
+<!doctype html>
+<html>
+  <head>
+    <title>Job Application for Backend Engineer at Acme</title>
+  </head>
+  <body>
+    <h1 class="app-title">Backend Engineer</h1>
+    <form id="application_form">
+      <h2>Submit your application</h2>
+      <div class="field">
+        <label for="first_name">First Name <span class="asterisk">*</span></label>
+        <input type="text" id="first_name" name="job_application[first_name]" aria-required="true" />
+      </div>
+      <div class="field">
+        <label for="last_name">Last Name <span class="asterisk">*</span></label>
+        <input type="text" id="last_name" name="job_application[last_name]" aria-required="true" />
+      </div>
+      <div class="field">
+        <label for="email">Email <span class="asterisk">*</span></label>
+        <input type="email" id="email" name="job_application[email]" aria-required="true" value="already@typed.com" />
+      </div>
+      <div class="field">
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" name="job_application[phone]" />
+      </div>
+      <div class="field">
+        <label>Resume/CV <span class="asterisk">*</span></label>
+        <button type="button" class="attach">Attach</button>
+        <input type="file" id="resume" name="job_application[resume]" accept=".pdf,.doc,.docx,.txt,.rtf" style="display: none" required />
+      </div>
+      <input type="hidden" name="job_application[token]" value="abc" />
+
+      <h3>Additional questions</h3>
+      <div class="field">
+        <label for="q_linkedin">LinkedIn Profile</label>
+        <input type="text" id="q_linkedin" name="job_application[answers_attributes][0][text_value]" />
+      </div>
+      <div class="field">
+        <label for="q_sponsor">Will you now or in the future require sponsorship? *</label>
+        <select id="q_sponsor" name="job_application[answers_attributes][1][boolean_value]">
+          <option value="">--</option>
+          <option value="1">Yes</option>
+          <option value="0">No</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="q_why">Why do you want to work at Acme?</label>
+        <textarea id="q_why" name="job_application[answers_attributes][2][text_value]" maxlength="1000"></textarea>
+      </div>
+
+      <h3>Voluntary Self-Identification</h3>
+      <fieldset>
+        <legend>Gender</legend>
+        <label><input type="radio" name="gender" value="1" /> Female</label>
+        <label><input type="radio" name="gender" value="2" /> Male</label>
+        <label><input type="radio" name="gender" value="3" checked /> Decline to self-identify</label>
+      </fieldset>
+
+      <label class="consent"><input type="checkbox" name="consent" required /> I agree to the privacy policy *</label>
+      <input type="submit" value="Submit Application" />
+    </form>
+  </body>
+</html>

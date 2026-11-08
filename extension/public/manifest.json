@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Apply Copilot",
+  "short_name": "Apply Copilot",
+  "version": "0.1.0",
+  "description": "Fills job application forms from your local profile. You review everything and press Submit yourself.",
+  "minimum_chrome_version": "114",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Open Apply Copilot",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "permissions": ["sidePanel", "storage", "scripting", "activeTab", "tabs"],
+  "host_permissions": [
+    "http://127.0.0.1:8010/*",
+    "http://localhost:8010/*",
+    "https://*.greenhouse.io/*",
+    "https://*.lever.co/*",
+    "https://*.ashbyhq.com/*",
+    "https://*.myworkdayjobs.com/*",
+    "https://*.myworkday.com/*",
+    "https://*.naukri.com/*",
+    "https://*.smartrecruiters.com/*",
+    "https://*.workable.com/*",
+    "https://*.icims.com/*"
+  ],
+  "optional_host_permissions": ["https://*/*", "http://*/*"]
+}

@@ -1,0 +1,121 @@
+# Every field the profile vault knows about, grouped into sections.
+#
+#   key       stable id used by the matcher and the extension (never rename one)
+#   label     what the dashboard shows
+#   type      text · email · tel · url · number · date · textarea · select · yes_no
+#   options   choices for `select`
+#   never_ai  true → only you set this value. The resume importer won't fill it, and the
+#             AI drafter will never write it. It is still filled from the vault.
+#   default   value a new profile starts with
+#   help      hint shown under the input
+#
+# Adding a field is adding data here, not code.
+
+sections:
+  - id: contact
+    title: Contact
+    fields:
+      - { key: first_name, label: First name, type: text }
+      - { key: last_name, label: Last name, type: text }
+      - { key: preferred_name, label: Preferred name, type: text, help: Leave empty to use your first name. }
+      - { key: email, label: Email, type: email }
+      - { key: phone_country_code, label: Phone country code, type: text, help: "For example +91" }
+      - { key: phone, label: Phone number, type: tel, help: Without the country code. }
+      - { key: address_line, label: Street address, type: text }
+      - { key: city, label: City, type: text }
+      - { key: state, label: State / region, type: text }
+      - { key: postal_code, label: Postal code, type: text }
+      - { key: country, label: Country, type: text }
+
+  - id: links
+    title: Links
+    fields:
+      - { key: linkedin_url, label: LinkedIn, type: url }
+      - { key: github_url, label: GitHub, type: url }
+      - { key: portfolio_url, label: Portfolio / website, type: url }
+      - { key: leetcode_url, label: LeetCode / coding profile, type: url }
+      - { key: twitter_url, label: X / Twitter, type: url }
+
+  - id: work
+    title: Current work
+    fields:
+      - { key: headline, label: Headline, type: text, help: "One line, for example: Backend engineer, Python and AWS" }
+      - { key: current_title, label: Current job title, type: text }
+      - { key: current_company, label: Current company, type: text }
+      - { key: total_experience_years, label: Total experience (years), type: number }
+      - { key: notice_period_days, label: Notice period (days), type: number }
+      - { key: earliest_start_date, label: Earliest start date, type: date }
+      - { key: skills, label: Key skills, type: textarea, help: Comma-separated. }
+      - { key: summary, label: Professional summary, type: textarea }
+
+  - id: preferences
+    title: Location & preferences
+    fields:
+      - { key: preferred_locations, label: Preferred locations, type: text, help: Comma-separated. }
+      - { key: willing_to_relocate, label: Willing to relocate, type: yes_no }
+      - key: work_mode_preference
+        label: Work mode
+        type: select
+        options: [On-site, Hybrid, Remote, Any]
+      - { key: languages, label: Languages spoken, type: text }
+      - { key: how_did_you_hear, label: "How did you hear about us?", type: text, default: Company careers page }
+
+  - id: salary
+    title: Salary
+    fields:
+      - { key: salary_currency, label: Currency, type: text, never_ai: true, default: INR }
+      - { key: current_ctc, label: Current CTC (yearly), type: number, never_ai: true }
+      - { key: expected_ctc, label: Expected CTC (yearly), type: number, never_ai: true }
+      - key: minimum_ctc
+        label: Minimum you'd accept
+        type: number
+        never_ai: true
+        help: Never sent to an employer; used only to warn you if a form's range is below it.
+
+  - id: authorisation
+    title: Work authorisation
+    fields:
+      - { key: nationality, label: Nationality, type: text, never_ai: true }
+      - { key: authorised_countries, label: Countries you can work in without a visa, type: text, never_ai: true, help: Comma-separated. }
+      - { key: needs_sponsorship, label: Needs visa sponsorship, type: yes_no, never_ai: true }
+      - { key: has_criminal_record, label: Criminal record, type: yes_no, never_ai: true, default: "No" }
+
+  - id: education
+    title: Highest education
+    fields:
+      - { key: highest_degree, label: Degree, type: text, help: "For example B.Tech" }
+      - { key: field_of_study, label: Field of study, type: text }
+      - { key: university, label: College / university, type: text }
+      - { key: graduation_year, label: Graduation year, type: number }
+      - { key: grade, label: CGPA / percentage, type: text }
+
+  - id: eeo
+    title: Voluntary self-identification
+    description: >
+      Diversity questions on US and EU forms. They default to "Prefer not to say", and only
+      you can change them.
+    fields:
+      - key: gender
+        label: Gender
+        type: select
+        options: [Prefer not to say, Female, Male, Non-binary]
+        never_ai: true
+        default: Prefer not to say
+      - key: ethnicity
+        label: Race / ethnicity
+        type: select
+        options: [Prefer not to say, Asian, Black or African American, Hispanic or Latino, White, Two or more races]
+        never_ai: true
+        default: Prefer not to say
+      - key: veteran_status
+        label: Veteran status
+        type: select
+        options: [Prefer not to say, I am not a protected veteran, I am a protected veteran]
+        never_ai: true
+        default: Prefer not to say
+      - key: disability_status
+        label: Disability
+        type: select
+        options: [Prefer not to say, "No, I do not have a disability", "Yes, I have a disability"]
+        never_ai: true
+        default: Prefer not to say

@@ -1,0 +1,17 @@
+{
+  "name": "job-apply-agent-dev-scripts",
+  "private": true,
+  "description": "Dev helpers: run the FastAPI backend, the React dashboard and the extension build together.",
+  "scripts": {
+    "setup": "node setup.mjs",
+    "dev": "concurrently --kill-others-on-fail --names api,web,ext --prefix-colors magenta,cyan,yellow \"npm:dev:api\" \"npm:dev:web\" \"npm:dev:ext\"",
+    "dev:api": "node run-backend.mjs",
+    "dev:web": "npm --prefix ../dashboard run dev",
+    "dev:ext": "npm --prefix ../extension run watch",
+    "build:extension": "npm --prefix ../extension run build",
+    "test": "node run-backend.mjs --tests && npm --prefix ../dashboard run build && npm --prefix ../extension test && npm --prefix ../extension run build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  }
+}
