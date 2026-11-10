@@ -22,6 +22,10 @@ const INPUT_KINDS: Record<string, FieldKind> = {
 const KEEP_WHEN_HIDDEN = new Set(["file", "radio", "checkbox"]);
 const CUSTOM_SELECT_SELECTOR = "button[aria-haspopup='listbox'], [role='combobox']:not(input), [role='listbox'][aria-label]";
 
+// Hidden "trap" fields for bots. Filling one gets an application flagged as spam.
+const HONEYPOT_LABEL = /\b(robots?|bots?|spam)\b.*\bonly\b|for robots|leave (this|it) (field )?(blank|empty)|do not (fill|enter|complete)|if you('|’)re (a )?human/i;
+const HONEYPOT_NAME = /honey ?pot|^hp_|bot_?trap|winnie/i;
+
 let nextId = 1;
 
 function fieldId(el: Element): string {
@@ -161,6 +165,9 @@ export function extractFields(doc: Document): ExtractedField[] {
     }
 
     const label = findLabel(el);
+    if (HONEYPOT_LABEL.test(label.text) || HONEYPOT_NAME.test(el.getAttribute("name") ?? "")) return;
+    // A dropdown with no question near it is page chrome (language or region pickers), not the form.
+    if (kind === "custom-select" && label.source === "none") return;
     const field = baseField(el, kind, label, headings);
     if (kind === "select") {
       const select = el as HTMLSelectElement;

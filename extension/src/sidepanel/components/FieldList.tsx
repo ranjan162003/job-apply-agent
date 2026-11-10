@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import type { FieldKind } from "../../shared/fields";
+import type { RowStatus } from "../autofill";
 import { KIND_LABELS, type FieldSection, type ListedField } from "../fieldGroups";
 
 const KIND_ICONS: Record<FieldKind, LucideIcon> = {
@@ -42,6 +43,8 @@ interface FieldListProps {
   /** `${frameId}-${fieldId}` of the field shown on the page. */
   activeKey: string | null;
   onSelect: (field: ListedField) => void;
+  /** After "Fill from profile": what happened to each field. */
+  rowStatus?: Map<string, RowStatus>;
 }
 
 function optionsPreview(options: string[]): string {
@@ -49,7 +52,18 @@ function optionsPreview(options: string[]): string {
   return options.length > 4 ? `${shown} · +${options.length - 4} more` : shown;
 }
 
-export function FieldList({ sections, activeKey, onSelect }: FieldListProps) {
+function StatusLine({ status }: { status: RowStatus }) {
+  if (status.kind === "filled") return <span className="field-row__status field-row__status--filled">✓ {status.value}</span>;
+  if (status.kind === "kept") return <span className="field-row__status">Kept what was already there</span>;
+  return (
+    <span className={`field-row__status${status.kind === "needs-you" ? " field-row__status--needs-you" : ""}`}>
+      {status.kind === "needs-you" ? "Needs you: " : ""}
+      {status.reason}
+    </span>
+  );
+}
+
+export function FieldList({ sections, activeKey, onSelect, rowStatus }: FieldListProps) {
   return (
     <div className="field-list">
       {sections.map((section, index) => (
@@ -58,6 +72,7 @@ export function FieldList({ sections, activeKey, onSelect }: FieldListProps) {
           <ul>
             {section.fields.map((field) => {
               const Icon = KIND_ICONS[field.kind];
+              const status = rowStatus?.get(`${field.frameId}-${field.id}`);
               return (
                 <li key={`${field.frameId}-${field.id}`}>
                   <button
@@ -83,6 +98,7 @@ export function FieldList({ sections, activeKey, onSelect }: FieldListProps) {
                         {field.options.length > 0 && ` · ${optionsPreview(field.options)}`}
                         {field.maxLength && ` · max ${field.maxLength} chars`}
                       </span>
+                      {status && <StatusLine status={status} />}
                     </span>
                     <span className="field-row__tags">
                       {field.hasValue && <span className="tag tag--good">filled</span>}

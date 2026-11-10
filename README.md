@@ -5,10 +5,10 @@ details once in a **profile vault** on your own computer; Apply Copilot reads ea
 (Greenhouse, Lever, Ashby, Workday, Naukri or any careers page), fills what it's sure of, drafts the
 long answers for you to review, and leaves the rest to you. **You always press Submit yourself.**
 
-> Status: **v0.1 (in progress)**. The profile vault, resume import, and an extension that lists every
-> field on an application form are done. Filling the fields comes next (see [Roadmap](#roadmap)).
+> Status: **v0.2 (in progress)**. The profile vault, resume import, and rule-based form filling
+> (including resume upload) work. AI-drafted answers come next (see [Roadmap](#roadmap)).
 
-## Features (v0.1)
+## Features
 
 - **Profile vault:** contact, links, current work, preferences, salary, work authorisation,
   education, diversity answers, plus your work experience and education history. Stored in a local
@@ -25,6 +25,14 @@ long answers for you to review, and leaves the rest to you. **You always press S
   label, type, options, and whether it's required or already filled. Click a field to jump to it.
   - It works on the main applicant tracking systems out of the box. For any other site, it asks
     for access first.
+- **Fill from profile:** one click fills names, contact details, links, dropdowns and yes/no
+  questions, and attaches your default resume. Values are set the way a person types, so React and
+  Vue forms register them, and anything you already typed is kept.
+  - Fields are recognised from their label, `autocomplete` and `name` attributes
+    ([`synonyms.yaml`](backend/app/matching/synonyms.yaml)), and choices like "No, I will not require
+    sponsorship" or "India (+91)" are matched to your profile answer.
+  - Hidden anti-bot fields, consent checkboxes and passwords are never touched. Every field it
+    can't answer is marked **Needs you**.
 - **Pairing:** the extension needs a code from the dashboard before it can read your profile.
 - **Agent connectors:** Claude, Gemini or local Ollama (private: nothing leaves your machine).
 
@@ -71,7 +79,7 @@ Then:
 2. Load the extension: `chrome://extensions` → turn on **Developer mode** → **Load unpacked** →
    choose `extension/dist`.
 3. In the dashboard, open **Extension** → **Create pairing code**, and paste it into the side panel.
-4. Open a job application and click the Apply Copilot icon.
+4. Open a job application, click the Apply Copilot icon, then **Fill from profile**.
 
 ## Privacy and safety
 
@@ -91,7 +99,7 @@ override them.
 
 1. ~~Profile vault and resume import~~
 2. ~~Extension skeleton: side panel, pairing, field listing~~
-3. Greenhouse and Lever filling, synonym rules, resume upload
+3. ~~Rule-based filling (synonym rules, option matching), resume upload~~
 4. Answer memory ("remember this answer")
 5. AI matcher (sees labels and key names only, never your values) and answer drafter
 6. Application log, synced to the job tracker

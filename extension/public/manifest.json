@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Apply Copilot",
   "short_name": "Apply Copilot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Fills job application forms from your local profile. You review everything and press Submit yourself.",
   "minimum_chrome_version": "114",
   "icons": {

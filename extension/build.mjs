@@ -14,7 +14,13 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 const outdir = path.join(root, "dist");
 const isWatch = process.argv.includes("--watch");
 
-rmSync(outdir, { recursive: true, force: true });
+// OneDrive or a loaded extension can briefly lock dist/; overwriting it is fine, so don't crash
+// (a crash here would also stop the dashboard, because `npm run dev` stops everything together).
+try {
+  rmSync(outdir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+} catch (error) {
+  console.warn(`[extension] couldn't clear dist/ (${error.code ?? error.message}); building over it.`);
+}
 mkdirSync(outdir, { recursive: true });
 
 const copyStatic = {

@@ -476,6 +476,32 @@ a {
   color: var(--good);
 }
 
+.panel-button--block {
+  width: 100%;
+  padding: 9px 12px;
+}
+
+.fill-summary {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.field-row__status {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.field-row__status--filled {
+  color: var(--good);
+  font-weight: 600;
+}
+
+.field-row__status--needs-you {
+  color: var(--warning);
+}
+
 /* ---- Footer ---- */
 .panel-footer {
   display: flex;

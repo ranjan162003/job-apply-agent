@@ -132,12 +132,13 @@ export function ExtensionPage() {
           <Puzzle size={18} aria-hidden="true" /> 3. Open an application form
         </h2>
         <p>
-          Open a job application (Greenhouse, Lever, Ashby, Workday, Naukri or any careers page) and click the Apply
-          Copilot icon. The side panel lists every field it finds on the page. Click a field to jump to it.
+          Open a job application (Greenhouse, Lever, Ashby, Workday, Naukri or any careers page), click the Apply
+          Copilot icon, then <strong>Fill from profile</strong>. It fills names, contact details, links, dropdowns and
+          yes/no questions, and attaches your default resume. Anything it isn't sure of is marked <em>Needs you</em>.
         </p>
         <p className="muted">
-          Filling the fields from your profile comes in the next version. Apply Copilot never presses Submit: you
-          always review and send the application yourself.
+          It never ticks consent boxes, creates accounts or presses Submit: you check every answer and send the
+          application yourself.
         </p>
       </section>
     </div>

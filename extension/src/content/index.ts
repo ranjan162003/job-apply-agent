@@ -1,11 +1,12 @@
 // Injected into the page (and its frames) by the side panel when the user scans.
-// It only reads the page, plus a marker attribute per field and a highlight on request.
+// It reads the page, marks each field, and fills fields only when the side panel asks.
 
 import type { ApplyCopilotPageApi, FrameScan } from "../shared/fields";
 import { extractFields, ID_ATTRIBUTE } from "./extract";
+import { attachFile, fillFields } from "./fill";
 import { detectSite, jobContext } from "./sites";
 
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 const HIGHLIGHT_CLASS = "apply-copilot-highlight";
 
 function ensureHighlightStyle(doc: Document) {
@@ -45,6 +46,12 @@ function highlight(fieldId: string): boolean {
 
 // Injecting twice (a rescan) must not redefine anything.
 if (!window.__applyCopilot || window.__applyCopilot.version !== VERSION) {
-  const api: ApplyCopilotPageApi = { version: VERSION, scan, highlight };
+  const api: ApplyCopilotPageApi = {
+    version: VERSION,
+    scan,
+    highlight,
+    fill: (requests) => fillFields(document, requests),
+    attachFile: (fieldId, base64, filename, mimeType) => attachFile(document, fieldId, base64, filename, mimeType),
+  };
   window.__applyCopilot = api;
 }

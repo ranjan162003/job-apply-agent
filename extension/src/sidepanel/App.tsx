@@ -1,7 +1,8 @@
-import { Braces, Check, Loader2, RefreshCw, Settings, ShieldAlert, Unplug } from "lucide-react";
+import { Braces, Check, Loader2, RefreshCw, Settings, ShieldAlert, Unplug, Wand2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { SITE_NAMES } from "../content/sites";
+import { autofill, type AutofillResult } from "./autofill";
 import { checkBackend, type BackendState } from "./backend";
 import { FieldList } from "./components/FieldList";
 import { SettingsView } from "./components/SettingsView";
@@ -24,6 +25,9 @@ export function App() {
   const [filter, setFilter] = useState<FieldFilter>("all");
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [fillResult, setFillResult] = useState<AutofillResult | null>(null);
+  const [isFilling, setIsFilling] = useState(false);
+  const [fillError, setFillError] = useState<string | null>(null);
   const scanRequest = useRef(0);
 
   useEffect(() => {
@@ -33,9 +37,14 @@ export function App() {
     });
   }, []);
 
-  const rescan = useCallback(async () => {
+  /** `keepFill`: a rescan right after filling keeps the per-field results on screen. */
+  const rescan = useCallback(async (keepFill = false) => {
     const request = ++scanRequest.current;
     setIsScanning(true);
+    if (!keepFill) {
+      setFillResult(null);
+      setFillError(null);
+    }
     const outcome = await scanActiveTab();
     if (request !== scanRequest.current) return; // a newer scan started (tab switched)
     setScan(outcome);
@@ -48,7 +57,7 @@ export function App() {
     void rescan();
     const onActivated = () => void rescan();
     const onUpdated = (_tabId: number, info: chrome.tabs.TabChangeInfo, tab: chrome.tabs.Tab) => {
-      if (tab.active && info.status === "complete") void rescan();
+      if (tab.active && info.status === "complete") void rescan(); // next page of a multi-step form
     };
     chrome.tabs.onActivated.addListener(onActivated);
     chrome.tabs.onUpdated.addListener(onUpdated);
@@ -68,6 +77,22 @@ export function App() {
     setActiveKey(`${field.frameId}-${field.id}`);
     const found = await highlightField(scan.tabId, field.frameId, field.id).catch(() => false);
     if (!found) void rescan(); // the page changed under us
+  }
+
+  async function fillFromProfile() {
+    if (scan?.status !== "ok" || !settings || !job) return;
+    setIsFilling(true);
+    setFillError(null);
+    try {
+      const result = await autofill(settings, scan.tabId, job.site, fields);
+      setFillResult(result);
+      await rescan(true); // refresh the "filled" tags from the page itself
+      setFilter("all");
+    } catch (err) {
+      setFillError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setIsFilling(false);
+    }
   }
 
   async function allow(origin: string) {
@@ -155,6 +180,19 @@ export function App() {
           </div>
         )}
 
+        {scan?.status === "ok" && counts.total > 0 && backend.status === "connected" && (
+          <button type="button" className="panel-button panel-button--primary panel-button--block" onClick={() => void fillFromProfile()} disabled={isFilling}>
+            {isFilling ? <Loader2 size={15} className="spin" /> : <Wand2 size={15} />} {isFilling ? "Filling…" : fillResult ? "Fill again" : "Fill from profile"}
+          </button>
+        )}
+        {fillResult && (
+          <p className="fill-summary" role="status">
+            <strong>{fillResult.filled}</strong> filled · <strong>{fillResult.needsYou}</strong> need you. Check every answer on the page, then
+            submit it yourself.
+          </p>
+        )}
+        {fillError && <p className="panel-alert">{fillError}</p>}
+
         {scan?.status === "ok" && (
           <p className="page-card__summary">
             <strong>{counts.total}</strong> field{counts.total === 1 ? "" : "s"} · {counts.required} required · {counts.filled} already filled
@@ -188,6 +226,7 @@ export function App() {
           <FieldList
             sections={visible}
             activeKey={activeKey}
+            rowStatus={fillResult?.rows}
             onSelect={(field) => void select(field)}
           />
         </>
@@ -195,7 +234,7 @@ export function App() {
 
       <footer className="panel-footer">
         <p className="muted">
-          This version lists the fields. Filling them from your profile comes next. Apply Copilot never presses Submit.
+          Apply Copilot fills what it's sure of and never ticks consent boxes or presses Submit. You check the answers and submit.
         </p>
         {counts.total > 0 && (
           <button type="button" className="panel-button" onClick={() => void copyJson()}>

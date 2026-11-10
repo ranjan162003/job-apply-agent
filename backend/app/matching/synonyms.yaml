@@ -1,0 +1,159 @@
+# How a form field is recognised as a profile value, without AI.
+#
+# Each rule maps to a profile key (or a derived key, see field_matcher.py) and lists:
+#   autocomplete  values of the HTML autocomplete attribute (exact)
+#   names         regexes tried on the field's name/id attribute
+#   labels        regexes tried on the normalised label (lowercase, punctuation → spaces)
+#   not_labels    regexes that veto the rule ("Phone device type" is not a phone number)
+# Rules are tried top to bottom, so specific ones ("first name") come before general ones ("name").
+
+rules:
+  - key: first_name
+    autocomplete: [given-name]
+    names: ['(^|[^a-z])first_?name', 'fname', 'given_?name']
+    labels: ['^(legal )?first name', '^given name', '^forename']
+
+  - key: last_name
+    autocomplete: [family-name]
+    names: ['(^|[^a-z])last_?name', 'lname', 'surname', 'family_?name']
+    labels: ['^(legal )?last name', '^surname', '^family name']
+
+  - key: preferred_name
+    labels: ['^preferred (first )?name', '^nick ?name', 'name you go by']
+
+  - key: full_name
+    autocomplete: [name]
+    names: ['^(full_?)?name$', 'full_?name', 'candidate_?name']
+    labels: ['^(your )?(full |legal )?name$', '^full name', '^candidate name', '^name as per']
+
+  - key: email
+    autocomplete: [email]
+    names: ['e_?mail']
+    labels: ['e ?mail']
+
+  - key: phone_full
+    autocomplete: [tel]
+    labels: ['^(mobile|phone|cell|contact)( number| no)?( with country code)$']
+
+  - key: phone_country_code
+    autocomplete: [tel-country-code]
+    names: ['country_?code', 'phone_?code', 'dial_?code']
+    labels: ['country (phone )?code', 'dial(ing)? code', 'phone code']
+
+  - key: phone
+    autocomplete: [tel-national]
+    names: ['phone', 'mobile', 'cell', '(^|_)tel($|_)']
+    labels: ['phone', 'mobile', 'cell ?(phone)? number', 'contact (number|no)', '^tel']
+    not_labels: ['device', 'type', 'extension', 'code']
+
+  - key: address_line
+    autocomplete: [street-address, address-line1]
+    names: ['address_?(line_?)?1', 'street']
+    labels: ['^(street )?address( line 1)?$', '^address line 1', '^street']
+
+  - key: city
+    autocomplete: [address-level2]
+    names: ['(^|_)city($|_)', 'town']
+    labels: ['^city', '^town', 'city of residence', 'current city']
+
+  - key: current_location
+    labels: ['^(current )?location$', 'where are you (currently )?(based|located)', '^current location']
+
+  - key: state
+    autocomplete: [address-level1]
+    names: ['(^|_)state($|_)', 'province', 'region']
+    labels: ['^state', '^province', '^region']
+
+  - key: postal_code
+    autocomplete: [postal-code]
+    names: ['zip', 'postal', 'pin_?code']
+    labels: ['zip', 'postal code', 'post ?code', 'pin ?code']
+
+  - key: country
+    autocomplete: [country, country-name]
+    names: ['(^|_)country($|_)']
+    labels: ['^country( of residence)?$', 'country you (live|reside) in']
+
+  - key: linkedin_url
+    names: ['linkedin']
+    labels: ['linked ?in']
+
+  - key: github_url
+    names: ['github']
+    labels: ['git ?hub']
+
+  - key: portfolio_url
+    autocomplete: [url]
+    names: ['portfolio', 'website']
+    labels: ['portfolio', '^(personal )?website', 'other website', 'blog']
+
+  - key: twitter_url
+    labels: ['twitter', '^x profile']
+
+  - key: current_company
+    autocomplete: [organization]
+    names: ['current_?(company|employer)', '^company$', 'org']
+    labels: ['current (company|employer|organi[sz]ation)', '^(company|employer)$', 'most recent (company|employer)']
+
+  - key: current_title
+    autocomplete: [organization-title]
+    names: ['current_?(title|role|designation)', 'job_?title']
+    labels: ['current (job )?(title|role|designation|position)', '^(job )?title$', '^designation']
+
+  - key: total_experience_years
+    labels: ['(total |overall )?(years of|yrs of) (professional |relevant |work )?experience', '^(total )?experience( in years)?$']
+
+  - key: notice_period_days
+    names: ['notice']
+    labels: ['notice period']
+
+  - key: expected_ctc
+    labels: ['expected (ctc|salary|compensation|pay)', 'desired (salary|compensation|pay)', 'salary expectation', 'expected annual']
+
+  - key: current_ctc
+    labels: ['current (ctc|salary|compensation|pay)']
+
+  - key: earliest_start_date
+    labels: ['(earliest )?(start|joining) date', 'when can you (start|join)', 'available to start']
+
+  - key: highest_degree
+    labels: ['^(highest )?(degree|qualification)( obtained)?$', 'highest (level of )?education']
+
+  - key: field_of_study
+    labels: ['field of study', '^(major|discipline|specialization|specialisation)$']
+
+  - key: university
+    labels: ['^(school|college|university|institute|institution)( name)?$', 'name of (school|college|university)']
+
+  - key: graduation_year
+    labels: ['graduation year', 'year of (graduation|passing)', 'passing year']
+
+  - key: grade
+    labels: ['^(cgpa|gpa|grade|percentage)']
+
+  - key: willing_to_relocate
+    labels: ['(willing|open) to relocate', 'relocat']
+
+  - key: needs_sponsorship
+    labels: ['(require|need)s? .*sponsorship', 'sponsorship']
+
+  - key: how_did_you_hear
+    labels: ['how did you (hear|find|learn) (about )?(us|this)', '^source$', 'referral source']
+
+  - key: languages
+    labels: ['languages? (you )?(speak|known|spoken)']
+
+  - key: gender
+    labels: ['^gender', 'gender identity']
+
+  - key: ethnicity
+    labels: ['race', 'ethnicity']
+
+  - key: veteran_status
+    labels: ['veteran']
+
+  - key: disability_status
+    labels: ['disabilit']
+
+  - key: nationality
+    labels: ['nationality', 'citizenship']

@@ -1,0 +1,39 @@
+<!-- Shape of a Workday "Create Account" step: a language picker, a honeypot and password fields. -->
+<!doctype html>
+<html>
+  <head>
+    <title>Create Account - Citi Careers Logo</title>
+  </head>
+  <body>
+    <header>
+      <button type="button" aria-haspopup="listbox">English</button>
+    </header>
+    <h2>Create Account</h2>
+    <div data-automation-id="email">
+      <label for="input-4">Email Address<abbr title="required">*</abbr></label>
+      <input id="input-4" type="text" aria-required="true" data-automation-id="email" />
+    </div>
+    <div>
+      <label for="input-5">Password<abbr title="required">*</abbr></label>
+      <input id="input-5" type="password" aria-required="true" />
+    </div>
+    <div style="position: absolute; left: -9999px">
+      <label for="website">Enter website. This input is for robots only, do not enter if you're human.</label>
+      <input id="website" type="text" name="website" tabindex="-1" />
+    </div>
+    <div>
+      <label for="phone">Phone Number</label>
+      <input id="phone" type="tel" />
+    </div>
+    <div>
+      <label for="type">Phone Device Type</label>
+      <select id="type"><option value="">Select One</option><option value="m">Mobile</option><option value="l">Landline</option></select>
+    </div>
+    <fieldset>
+      <legend>Have you previously worked for Citi?</legend>
+      <label><input type="radio" name="prev" value="true" /> Yes</label>
+      <label><input type="radio" name="prev" value="false" /> No</label>
+    </fieldset>
+    <input type="file" id="cv" aria-label="Upload resume" />
+  </body>
+</html>

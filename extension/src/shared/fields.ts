@@ -70,10 +70,23 @@ export interface PageFrameScan extends FrameScan {
   frameId: number;
 }
 
+export interface FillRequest {
+  id: string;
+  value: string;
+}
+
+export interface FillOutcome {
+  id: string;
+  /** kept = the page already had a value, so it was left alone. */
+  status: "filled" | "kept" | "missing" | "failed";
+}
+
 export interface ApplyCopilotPageApi {
   version: string;
   scan: () => FrameScan;
   highlight: (fieldId: string) => boolean;
+  fill: (requests: FillRequest[]) => FillOutcome[];
+  attachFile: (fieldId: string, base64: string, filename: string, mimeType: string) => FillOutcome;
 }
 
 declare global {
