@@ -1,0 +1,64 @@
+<!-- A careers page built without <label> elements: ARIA, placeholders, nearby text and custom widgets. -->
+<!doctype html>
+<html>
+  <head>
+    <title>Careers | Beta Labs</title>
+    <meta property="og:site_name" content="Beta Labs" />
+  </head>
+  <body>
+    <header>
+      <form role="search"><input type="text" name="q" placeholder="Search jobs" /></form>
+    </header>
+    <main>
+      <h1>Apply: Security Analyst</h1>
+      <div class="row">
+        <span id="cityLabel">Current city</span>
+        <input type="text" aria-labelledby="cityLabel" />
+      </div>
+      <div class="row">
+        <input type="text" aria-label="Years of experience" />
+      </div>
+      <div class="row">
+        <input type="text" placeholder="Notice period (days)" />
+      </div>
+      <div class="row">
+        <div class="question">Expected CTC (LPA)</div>
+        <div class="answer"><input type="text" /></div>
+      </div>
+      <div class="row">
+        <input type="text" name="currentCompanyName" />
+      </div>
+      <div class="row" hidden>
+        <input type="text" aria-label="Honeypot" />
+      </div>
+      <div class="row" style="display: none">
+        <input type="text" aria-label="Hidden by style" />
+      </div>
+      <div class="row">
+        <div id="relocateQ">Willing to relocate?</div>
+        <div role="radiogroup" aria-labelledby="relocateQ" aria-required="true">
+          <label><input type="radio" name="relocate" value="y" /> Yes</label>
+          <label><input type="radio" name="relocate" value="n" /> No</label>
+        </div>
+      </div>
+      <div class="row">
+        <p>Which areas interest you?</p>
+        <div>
+          <label><input type="checkbox" name="areas" value="soc" /> SOC</label>
+          <label><input type="checkbox" name="areas" value="appsec" checked /> AppSec</label>
+          <label><input type="checkbox" name="areas" value="grc" /> GRC</label>
+        </div>
+      </div>
+      <div class="row">
+        <label id="countryLabel">Country</label>
+        <button type="button" aria-haspopup="listbox" aria-labelledby="countryLabel">Select one</button>
+      </div>
+      <div class="row">
+        <input type="text" role="combobox" aria-label="College" />
+      </div>
+      <input type="password" aria-label="Create a password" />
+      <input type="text" aria-label="Disabled field" disabled />
+      <button type="submit">Send</button>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+# ---------- Python (backend) ----------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Local data: SQLite database (your profile vault) and uploaded resumes
+backend/data/
+*.db
+*.sqlite3
+
+# ---------- Node / React (dashboard, extension, scripts) ----------
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+npm-debug.log*
+test-results/
+playwright-report/
+# Packed extension builds and their signing key
+*.crx
+*.pem
+*.zip
+
+# ---------- Secrets / local env ----------
+# API keys and the pairing token live in the OS credential vault or as hashes, never in files.
+.env
+.env.*
+!.env.example
+
+# ---------- Personal notes / plans ----------
+*-plan.md
+
+# ---------- Editor / OS ----------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.log

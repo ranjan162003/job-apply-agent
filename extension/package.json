@@ -1,0 +1,28 @@
+{
+  "name": "job-apply-agent-extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Apply Copilot browser extension (Chrome / Edge, Manifest V3).",
+  "scripts": {
+    "build": "tsc --noEmit && node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "lucide-react": "^1.51.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "@types/node": "^20.19.43",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "esbuild": "^0.24.0",
+    "jsdom": "^25.0.1",
+    "typescript": "~5.6.3",
+    "vitest": "^2.1.8"
+  }
+}
