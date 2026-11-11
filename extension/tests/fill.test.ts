@@ -33,7 +33,10 @@ describe("Workday-style account page", () => {
       "Phone Device Type",
       "Have you previously worked for Citi?",
       "Upload resume",
+      "School or University",
     ]);
+    // Workday "Search" prompts are pick-from-list boxes, not free text.
+    expect(fields.find((f) => f.label === "School or University")?.kind).toBe("combobox");
   });
 
   it("fills text, selects and radios and fires the events frameworks listen to", () => {

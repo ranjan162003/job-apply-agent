@@ -3,10 +3,12 @@
 
 import type { ApplyCopilotPageApi, FrameScan } from "../shared/fields";
 import { extractFields, ID_ATTRIBUTE } from "./extract";
+import { ensureBlocks } from "./blocks";
+import { chooseOption, openAndListOptions } from "./dropdowns";
 import { attachFile, fillFields } from "./fill";
 import { detectSite, jobContext } from "./sites";
 
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 const HIGHLIGHT_CLASS = "apply-copilot-highlight";
 
 function ensureHighlightStyle(doc: Document) {
@@ -52,6 +54,9 @@ if (!window.__applyCopilot || window.__applyCopilot.version !== VERSION) {
     highlight,
     fill: (requests) => fillFields(document, requests),
     attachFile: (fieldId, base64, filename, mimeType) => attachFile(document, fieldId, base64, filename, mimeType),
+    listOptions: (fieldId, searchText) => openAndListOptions(document, fieldId, searchText),
+    chooseOption: (fieldId, optionText) => chooseOption(document, fieldId, optionText),
+    ensureBlocks: (kind, wanted) => ensureBlocks(document, kind, wanted),
   };
   window.__applyCopilot = api;
 }

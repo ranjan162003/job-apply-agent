@@ -1,7 +1,7 @@
-// Put values into form fields the way a person would, so React/Vue forms notice the change.
+// Put values into form fields the way a person would, so React/Vue/Workday forms notice the change.
 //
-// Setting `input.value = x` directly is ignored by React: it tracks the value through the
-// native setter. So the prototype's setter is called, then input/change/blur events are fired.
+// Text is typed with the browser's insertText command (trusted events). Where that can't work,
+// the prototype's value setter is called (React ignores `input.value = x`), then events are fired.
 
 import type { FillOutcome, FillRequest } from "../shared/fields";
 import { ID_ATTRIBUTE } from "./extract";
@@ -28,20 +28,74 @@ function same(a: string, b: string): boolean {
   return collapse(a).toLowerCase() === collapse(b).toLowerCase();
 }
 
-function fillText(el: HTMLInputElement | HTMLTextAreaElement, value: string): FillOutcome["status"] {
+/**
+ * Type the text with the browser's own "insert text" command. It produces real (trusted)
+ * beforeinput/input events, exactly like typing, which forms such as Workday require: they
+ * ignore script-made events and then report a visibly filled field as empty.
+ */
+function insertText(el: HTMLInputElement | HTMLTextAreaElement, value: string): boolean {
+  const doc = el.ownerDocument;
+  if (typeof doc.execCommand !== "function") return false;
+  el.select(); // replace whatever is there
+  try {
+    return doc.execCommand("insertText", false, value) && el.value === value;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * When the user clicks "Fill" the side panel has keyboard focus, not the page. Chrome then
+ * doesn't fire the page's focus/blur events, yet forms like Workday save a field's value
+ * only when it loses focus. So those events are sent by hand when the page isn't focused.
+ */
+function focusField(el: HTMLElement): boolean {
   el.focus({ preventScroll: true });
-  setNativeValue(el, value);
-  fire(el, "input", "change");
-  el.blur(); // fires blur/focusout, where many forms validate
+  const pageHasFocus = el.ownerDocument.hasFocus();
+  if (!pageHasFocus) {
+    el.dispatchEvent(new FocusEvent("focus"));
+    el.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+  }
+  return pageHasFocus;
+}
+
+function leaveField(el: HTMLElement, pageHasFocus: boolean) {
+  if (pageHasFocus) {
+    el.blur(); // real blur/focusout
+  } else {
+    el.dispatchEvent(new FocusEvent("blur"));
+    el.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    el.blur();
+  }
+}
+
+function fillText(el: HTMLInputElement | HTMLTextAreaElement, value: string): FillOutcome["status"] {
+  const pageHasFocus = focusField(el);
+  if (!insertText(el, value)) {
+    // Fallback (no page focus, date inputs): the native setter, so React's value tracker sees a change.
+    setNativeValue(el, value);
+    el.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: value }));
+  }
+  fire(el, "change");
+  leaveField(el, pageHasFocus); // where Workday and many other forms save and validate
   return el.value === value ? "filled" : "failed";
 }
 
 function fillSelect(select: HTMLSelectElement, value: string): FillOutcome["status"] {
   const option = Array.from(select.options).find((o) => same(o.text, value) || o.value === value);
   if (!option) return "failed";
+  const pageHasFocus = focusField(select);
   setNativeValue(select, option.value);
   fire(select, "input", "change");
+  leaveField(select, pageHasFocus);
   return select.value === option.value ? "filled" : "failed";
+}
+
+/** Only "I currently work here"-style boxes get here; consent boxes are never sent to fill. */
+function fillCheckbox(box: HTMLInputElement, value: string): FillOutcome["status"] {
+  const wanted = value === "true";
+  if (box.checked !== wanted) box.click();
+  return box.checked === wanted ? "filled" : "failed";
 }
 
 function fillRadio(radios: HTMLInputElement[], value: string): FillOutcome["status"] {
@@ -63,11 +117,16 @@ function hasValue(el: HTMLElement, all: HTMLElement[]): boolean {
 }
 
 export function fillFields(doc: Document, requests: FillRequest[], overwrite = false): FillOutcome[] {
-  return requests.map(({ id, value }) => {
+  return requests.map(({ id, value: requested }) => {
+    let value = requested;
     const all = elementsFor(doc, id);
     const el = all[0];
     if (!el) return { id, status: "missing" };
+    const input = el as HTMLInputElement;
+    if (input.type === "checkbox") return { id, status: fillCheckbox(input, value) };
     if (!overwrite && hasValue(el, all)) return { id, status: "kept" };
+    // <input type=month> wants "2023-03", not the "2023-03-01" sent for date inputs.
+    if (input.type === "month" && /^\d{4}-\d{2}-\d{2}$/.test(value)) value = value.slice(0, 7);
     try {
       if (el.tagName === "SELECT") return { id, status: fillSelect(el as HTMLSelectElement, value) };
       if ((el as HTMLInputElement).type === "radio") return { id, status: fillRadio(all as HTMLInputElement[], value) };

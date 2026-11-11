@@ -45,6 +45,7 @@ export interface FieldMatch {
   value: string | null;
   resume_id: number | null;
   resume_filename: string | null;
+  pick_from_list: boolean;
   note: string | null;
 }
 
@@ -67,6 +68,7 @@ export interface MatchField {
   autocomplete: string | null;
   placeholder: string | null;
   max_length: number | null;
+  section: string | null;
 }
 
 /** Ask the backend what goes in each field. Only labels and field metadata are sent, never page text. */
@@ -90,4 +92,23 @@ export async function downloadResume(settings: PanelSettings, resumeId: number):
   let binary = "";
   for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
   return { base64: btoa(binary), mimeType: response.headers.get("Content-Type") ?? "application/octet-stream" };
+}
+
+/** Which of an opened dropdown's choices matches the answer; null when none clearly does. */
+export async function pickOption(settings: PanelSettings, value: string, options: string[]): Promise<string | null> {
+  const response = await fetch(`${settings.backendUrl.replace(/\/+$/, "")}/api/ext/pick`, {
+    method: "POST",
+    headers: { ...authedHeaders(settings), "Content-Type": "application/json" },
+    body: JSON.stringify({ value, options }),
+  });
+  if (!response.ok) throw await failure(response);
+  return ((await response.json()) as { option: string | null }).option;
+}
+
+/** How many jobs and schools the profile has, so the page can show one block for each. */
+export async function fetchEntryCounts(settings: PanelSettings): Promise<{ jobs: number; schools: number }> {
+  const response = await fetch(`${settings.backendUrl.replace(/\/+$/, "")}/api/ext/profile`, { headers: authedHeaders(settings) });
+  if (!response.ok) throw await failure(response);
+  const profile = (await response.json()) as { experiences: unknown[]; educations: unknown[] };
+  return { jobs: profile.experiences.length, schools: profile.educations.length };
 }

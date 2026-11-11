@@ -70,3 +70,16 @@ describe("side panel field grouping", () => {
     expect(bestJob(frames)).toEqual({ site: "greenhouse", heading: "Backend Engineer", company: "Acme", pageTitle: "Careers at Acme" });
   });
 });
+
+describe("search terms for type-to-search boxes", () => {
+  it("tries the start of the name, then each part of a long name", async () => {
+    const { searchTermsFor } = await import("../src/sidepanel/autofill");
+    expect(searchTermsFor("COLLEGE OF ENGINEERING GUINDY, ANNA UNIVERSITY, CHENNAI")).toEqual([
+      "COLLEGE OF ENGINEERING",
+      "COLLEGE OF ENGINEERING GUINDY",
+      "ANNA UNIVERSITY",
+      "CHENNAI",
+    ]);
+    expect(searchTermsFor("Information Technology")).toEqual(["Information Technology", "Information"]);
+  });
+});

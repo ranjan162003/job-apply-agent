@@ -100,6 +100,9 @@ rules:
     names: ['current_?(title|role|designation)', 'job_?title']
     labels: ['current (job )?(title|role|designation|position)', '^(job )?title$', '^designation']
 
+  - key: current_role_description
+    labels: ['^role description', '^(job|position) description', '(key )?responsibilit', '^duties', 'describe your (current )?role', 'what did you do']
+
   - key: total_experience_years
     labels: ['(total |overall )?(years of|yrs of) (professional |relevant |work )?experience', '^(total )?experience( in years)?$']
 

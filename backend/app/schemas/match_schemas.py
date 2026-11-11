@@ -18,6 +18,7 @@ class PageField(BaseModel):
     autocomplete: str | None = Field(default=None, max_length=100)
     placeholder: str | None = Field(default=None, max_length=300)
     max_length: int | None = None
+    section: str | None = Field(default=None, max_length=300)
 
 
 class MatchRequest(BaseModel):
@@ -41,8 +42,20 @@ class FieldMatch(BaseModel):
     value: str | None = None
     resume_id: int | None = Field(default=None, description="File fields: the resume to upload.")
     resume_filename: str | None = None
+    pick_from_list: bool = Field(default=False, description="Open the dropdown, then ask /api/ext/pick which choice to click.")
     note: str | None = None
 
 
 class MatchResponse(BaseModel):
     matches: list[FieldMatch]
+
+
+class PickRequest(BaseModel):
+    """The choices a dropdown showed once opened, and the answer to find among them."""
+
+    value: str = Field(max_length=500)
+    options: list[str] = Field(max_length=1000)
+
+
+class PickResponse(BaseModel):
+    option: str | None

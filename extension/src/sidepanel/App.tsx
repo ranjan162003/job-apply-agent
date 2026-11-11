@@ -28,6 +28,7 @@ export function App() {
   const [fillResult, setFillResult] = useState<AutofillResult | null>(null);
   const [isFilling, setIsFilling] = useState(false);
   const [fillError, setFillError] = useState<string | null>(null);
+  const [fillProgress, setFillProgress] = useState<string | null>(null);
   const scanRequest = useRef(0);
 
   useEffect(() => {
@@ -84,7 +85,13 @@ export function App() {
     setIsFilling(true);
     setFillError(null);
     try {
-      const result = await autofill(settings, scan.tabId, job.site, fields);
+      const rescanFields = async () => {
+        const outcome = await scanActiveTab();
+        if (outcome.status !== "ok") return fields;
+        setScan(outcome);
+        return allFields(outcome.frames);
+      };
+      const result = await autofill(settings, scan.tabId, job.site, fields, scan.frames.map((f) => f.frameId), rescanFields, setFillProgress);
       setFillResult(result);
       await rescan(true); // refresh the "filled" tags from the page itself
       setFilter("all");
@@ -92,6 +99,7 @@ export function App() {
       setFillError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsFilling(false);
+      setFillProgress(null);
     }
   }
 
@@ -180,15 +188,21 @@ export function App() {
           </div>
         )}
 
-        {scan?.status === "ok" && counts.total > 0 && backend.status === "connected" && (
+        {scan?.status === "ok" && backend.status === "connected" && (
           <button type="button" className="panel-button panel-button--primary panel-button--block" onClick={() => void fillFromProfile()} disabled={isFilling}>
             {isFilling ? <Loader2 size={15} className="spin" /> : <Wand2 size={15} />} {isFilling ? "Filling…" : fillResult ? "Fill again" : "Fill from profile"}
           </button>
         )}
-        {fillResult && (
+        {isFilling && fillProgress && (
           <p className="fill-summary" role="status">
-            <strong>{fillResult.filled}</strong> filled · <strong>{fillResult.needsYou}</strong> need you. Check every answer on the page, then
-            submit it yourself.
+            {fillProgress}
+          </p>
+        )}
+        {fillResult && !isFilling && (
+          <p className="fill-summary" role="status">
+            <strong>{fillResult.filled}</strong> filled · <strong>{fillResult.needsYou}</strong> need you
+            {fillResult.blocksAdded > 0 && ` · added ${fillResult.blocksAdded} job/education block${fillResult.blocksAdded === 1 ? "" : "s"}`}.
+            Check every answer on the page, then save or submit it yourself.
           </p>
         )}
         {fillError && <p className="panel-alert">{fillError}</p>}
@@ -203,7 +217,8 @@ export function App() {
 
       {scan?.status === "ok" && counts.total === 0 && (
         <p className="panel-empty muted">
-          No form fields here yet. If the form opens after a click ("Apply"), click it, then scan again.
+          No form fields here yet. If the page only has "Add" buttons (work experience, education), Fill from profile adds
+          one block per entry in your profile. If the form opens after a click ("Apply"), click it, then scan again.
         </p>
       )}
 

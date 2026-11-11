@@ -87,6 +87,12 @@ export interface ApplyCopilotPageApi {
   highlight: (fieldId: string) => boolean;
   fill: (requests: FillRequest[]) => FillOutcome[];
   attachFile: (fieldId: string, base64: string, filename: string, mimeType: string) => FillOutcome;
+  /** Open a custom dropdown / search box and return the choices it shows. */
+  listOptions: (fieldId: string, searchText: string | null) => Promise<string[]>;
+  /** Click the choice with this text (null: close the list without choosing). */
+  chooseOption: (fieldId: string, optionText: string | null) => Promise<boolean>;
+  /** Click "Add" / "Add Another" until the page shows `wanted` job or school blocks. */
+  ensureBlocks: (kind: "job" | "school", wanted: number) => Promise<number>;
 }
 
 declare global {

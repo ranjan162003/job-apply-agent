@@ -13,6 +13,7 @@ from pathlib import Path
 
 import yaml
 
+from app.matching.entry_matcher import EntryField, entry_value, find_entry_field
 from app.matching.option_picker import normalize, pick_option
 from app.schemas.match_schemas import FieldMatch, MatchStatus, PageField
 
@@ -28,7 +29,16 @@ DERIVED_LABELS = {
     "full_name": "Full name",
     "phone_full": "Phone with country code",
     "current_location": "Current location",
+    "current_role_description": "What you did (newest job)",
 }
+
+
+@dataclass(frozen=True)
+class Entries:
+    """The profile's lists, as plain dicts: jobs newest first, schools highest first."""
+
+    jobs: list[dict]
+    schools: list[dict]
 
 
 @dataclass(frozen=True)
@@ -55,9 +65,19 @@ def load_rules() -> tuple[Rule, ...]:
     )
 
 
-def derived_values(values: dict[str, str]) -> dict[str, str]:
-    """Profile values plus the combinations forms often ask for."""
+def derived_values(values: dict[str, str], newest_job: dict[str, str] | None = None) -> dict[str, str]:
+    """Profile values plus the combinations forms often ask for.
+
+    `newest_job` (the first entry of Work experience) fills the "current job" questions the
+    profile fields leave empty, and gives the role description.
+    """
     combined = dict(values)
+    if newest_job:
+        combined.setdefault("current_title", newest_job.get("title", ""))
+        combined.setdefault("current_company", newest_job.get("company", ""))
+        if newest_job.get("description"):
+            combined["current_role_description"] = newest_job["description"]
+        combined = {key: value for key, value in combined.items() if value}
     first = values.get("preferred_name") or values.get("first_name")
     if values.get("first_name") and values.get("last_name"):
         combined["full_name"] = f"{values['first_name']} {values['last_name']}"
@@ -92,12 +112,58 @@ def find_key(field: PageField) -> str | None:
     return None
 
 
+def _shape_choice_or_text(field: PageField, key: str, label: str, value: str) -> FieldMatch:
+    """Fit a known value to the field: pick a choice, or cut text to the field's max length."""
+    if field.kind in CHOICE_KINDS or field.kind == "combobox":
+        if not field.options and field.kind in ("custom-select", "combobox"):
+            # The choices only appear after the dropdown is opened: the extension opens it,
+            # then asks /api/ext/pick which one to click.
+            return FieldMatch(id=field.id, status=MatchStatus.FILL, profile_key=key, profile_label=label, value=value, pick_from_list=True)
+        if field.options:
+            option = pick_option(value, field.options)
+            if option is None:
+                return FieldMatch(id=field.id, status=MatchStatus.NO_OPTION, profile_key=key, profile_label=label, value=value,
+                                  note=f"Your answer “{value}” isn't one of the choices.")
+            value = option
+    elif field.kind not in TEXT_KINDS:
+        return FieldMatch(id=field.id, status=MatchStatus.SKIPPED, profile_key=key, profile_label=label)
+    if field.max_length and len(value) > field.max_length:
+        value = value[: field.max_length]
+    return FieldMatch(id=field.id, status=MatchStatus.FILL, profile_key=key, profile_label=label, value=value)
+
+
+def match_entry_field(field: PageField, entry_field: EntryField, entries: Entries) -> FieldMatch:
+    items = entries.jobs if entry_field.kind == "job" else entries.schools
+    key = f"{'experience' if entry_field.kind == 'job' else 'education'}[{entry_field.index}].{entry_field.attribute}"
+    if entry_field.index > len(items):
+        noun = "job" if entry_field.kind == "job" else "education entry"
+        return FieldMatch(id=field.id, status=MatchStatus.EMPTY_IN_PROFILE, profile_key=key, profile_label=entry_field.label,
+                          note=f"Your profile has no {noun} number {entry_field.index}.")
+    value = entry_value(entry_field, items[entry_field.index - 1], field)
+    if entry_field.attribute == "is_current":
+        if field.kind != "checkbox":
+            return FieldMatch(id=field.id, status=MatchStatus.SKIPPED, profile_key=key, profile_label=entry_field.label)
+        return FieldMatch(id=field.id, status=MatchStatus.FILL, profile_key=key, profile_label=entry_field.label, value=value)
+    if value is None:
+        if entry_field.attribute == "end_date":
+            return FieldMatch(id=field.id, status=MatchStatus.SKIPPED, profile_key=key, profile_label=entry_field.label,
+                              note="Current job: no end date.")
+        return FieldMatch(id=field.id, status=MatchStatus.EMPTY_IN_PROFILE, profile_key=key, profile_label=entry_field.label,
+                          note=f"“{entry_field.label}” is empty in your profile.")
+    return _shape_choice_or_text(field, key, entry_field.label, value)
+
+
 def match_field(
     field: PageField,
     values: dict[str, str],
     key_labels: dict[str, str],
     default_resume: tuple[int, str] | None,
+    entries: Entries | None = None,
 ) -> FieldMatch:
+    entry_field = find_entry_field(field) if entries is not None and field.kind != "file" else None
+    if entry_field is not None:
+        return match_entry_field(field, entry_field, entries)  # type: ignore[arg-type]
+
     if field.kind == "file":
         if COVER_LETTER_WORDS.search(field.label):
             return FieldMatch(id=field.id, status=MatchStatus.SKIPPED, note="Cover letters come in a later version.")
@@ -123,18 +189,4 @@ def match_field(
         return FieldMatch(id=field.id, status=MatchStatus.EMPTY_IN_PROFILE, profile_key=key, profile_label=label,
                           note=f"“{label}” is empty in your profile.")
 
-    if field.kind in CHOICE_KINDS:
-        if field.kind == "custom-select" and not field.options:
-            return FieldMatch(id=field.id, status=MatchStatus.SKIPPED, profile_key=key, profile_label=label, value=value,
-                              note="This dropdown type is filled in a later version.")
-        option = pick_option(value, field.options)
-        if option is None:
-            return FieldMatch(id=field.id, status=MatchStatus.NO_OPTION, profile_key=key, profile_label=label, value=value,
-                              note=f"Your answer “{value}” isn't one of the choices.")
-        value = option
-    elif field.kind not in TEXT_KINDS:
-        return FieldMatch(id=field.id, status=MatchStatus.SKIPPED, profile_key=key, profile_label=label)
-
-    if field.max_length and len(value) > field.max_length:
-        value = value[: field.max_length]
-    return FieldMatch(id=field.id, status=MatchStatus.FILL, profile_key=key, profile_label=label, value=value)
+    return _shape_choice_or_text(field, key, label, value)

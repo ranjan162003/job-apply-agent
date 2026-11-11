@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.core.app_settings import APP_VERSION, get_settings
 from app.db.database_session import get_db_session
 from app.schemas.extension_schemas import ExtensionProfile
-from app.schemas.match_schemas import MatchRequest, MatchResponse
+from app.schemas.match_schemas import MatchRequest, MatchResponse, PickRequest, PickResponse
 from app.schemas.pairing_schemas import ExtensionHello
 from app.security.extension_pairing import require_extension_token
 from app.services import match_service
@@ -32,6 +32,12 @@ def hello(session: Session = Depends(get_db_session)) -> ExtensionHello:
 @router.post("/match", response_model=MatchResponse)
 def match(body: MatchRequest, session: Session = Depends(get_db_session)) -> MatchResponse:
     return match_service.match_fields(session, body)
+
+
+@router.post("/pick", response_model=PickResponse)
+def pick(body: PickRequest) -> PickResponse:
+    """Which of an opened dropdown's choices matches the answer (null: none fits, leave it)."""
+    return match_service.pick(body)
 
 
 @router.get("/resumes/{resume_id}/file")

@@ -63,6 +63,15 @@ function inputKind(el: Element): FieldKind | null {
   const type = (input.getAttribute("type") ?? "text").toLowerCase();
   if (SKIPPED_INPUT_TYPES.has(type)) return null;
   if (input.getAttribute("role") === "combobox" || input.getAttribute("aria-autocomplete") === "list") return "combobox";
+  // Workday's "Search" prompts (school, field of study): plain inputs whose value only counts
+  // once a choice is picked from the list they open.
+  if (
+    input.getAttribute("data-uxi-widget-type") === "selectinput" ||
+    input.closest("[data-automation-id='multiselectInputContainer'], [data-automation-id='promptSearchInput']") ||
+    /^search$/i.test(input.getAttribute("placeholder")?.trim() ?? "")
+  ) {
+    return "combobox";
+  }
   return INPUT_KINDS[type] ?? "text";
 }
 
@@ -166,8 +175,10 @@ export function extractFields(doc: Document): ExtractedField[] {
 
     const label = findLabel(el);
     if (HONEYPOT_LABEL.test(label.text) || HONEYPOT_NAME.test(el.getAttribute("name") ?? "")) return;
-    // A dropdown with no question near it is page chrome (language or region pickers), not the form.
-    if (kind === "custom-select" && label.source === "none") return;
+    // Page chrome, not the form: site headers/menus, and dropdowns with no question of their own
+    // (a language picker whose only "label" is its current value, "English").
+    if (el.closest("header, nav, [role='banner'], [role='navigation']")) return;
+    if (kind === "custom-select" && (label.source === "none" || cleanLabel(readableText(el)).text === label.text)) return;
     const field = baseField(el, kind, label, headings);
     if (kind === "select") {
       const select = el as HTMLSelectElement;
